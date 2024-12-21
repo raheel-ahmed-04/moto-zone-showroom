@@ -1,6 +1,6 @@
 # Moto Zone - Car Showroom Website
 
-Developed by *Raheel Ahmed* and Bilal Arshad of Comsats University Islamabad as semester project in 5th semester.
+Developed by _Raheel Ahmed_ and Bilal Arshad of Comsats University Islamabad as semester project in 5th semester.
 
 ## Installation
 

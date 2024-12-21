@@ -4,7 +4,7 @@ import cors from "cors";
 import { User } from "./models.js"; // Ensure the path to your model is correct
 
 const app = express();
-const port = process.env.PORT || 5173;
+const port = process.env.PORT || 2000;
 
 app.use(cors());
 app.use(express.json());
