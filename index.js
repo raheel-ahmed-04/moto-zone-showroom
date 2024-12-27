@@ -1,8 +1,9 @@
+//index.js
 import express from "express";
 import mongoose from "mongoose";
 import cors from "cors";
 import bcrypt from "bcrypt";
-import { User } from "./models.js"; // Ensure the path to your model is correct
+import { User,Car } from "./models.js"; // Ensure the path to your model is correct
 
 const app = express();
 const port = 2000;
@@ -67,6 +68,57 @@ app.post("/login", async (req, res) => {
     res.status(500).json({ message: "Error logging in", error });
   }
 });
+
+// Get all cars
+app.get('/api/cars', async (req, res) => {
+  try {
+    const cars = await Car.find();
+    res.status(200).json(cars);
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching cars', error });
+  }
+});
+
+// Add a new car
+app.post('/api/cars', async (req, res) => {
+  try {
+    const car = new Car(req.body);
+    await car.save();
+    res.status(201).json({ message: 'Car added successfully', car });
+  } catch (error) {
+    res.status(500).json({ message: 'Error adding car', error });
+  }
+});
+
+// Update a car
+app.put('/api/cars/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const updatedCar = await Car.findByIdAndUpdate(id, req.body, { new: true });
+    if (!updatedCar) {
+      return res.status(404).json({ message: 'Car not found' });
+    }
+    res.status(200).json({ message: 'Car updated successfully', updatedCar });
+  } catch (error) {
+    res.status(500).json({ message: 'Error updating car', error });
+  }
+});
+
+// Delete a car
+app.delete('/api/cars/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const deletedCar = await Car.findByIdAndDelete(id);
+    if (!deletedCar) {
+      return res.status(404).json({ message: 'Car not found' });
+    }
+    res.status(200).json({ message: 'Car deleted successfully', deletedCar });
+  } catch (error) {
+    res.status(500).json({ message: 'Error deleting car', error });
+  }
+});
+
+
 
 app.get("/", (req, res) => {
   res.send("Hello World");
