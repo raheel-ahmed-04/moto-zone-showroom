@@ -4,6 +4,7 @@ import Home from "../pages/Home";
 import About from "../pages/About";
 import CarListing from "../pages/CarListing";
 import CarDetails from "../pages/CarDetails";
+import ManageCars from "../pages/ManageCars";
 import BikeListing from "../pages/BikeListing"; // New Bike Listing page
 import BikeDetails from "../pages/BikeDetails"; // New Bike Details page
 import Blog from "../pages/Blog";
@@ -30,6 +31,7 @@ const Routers = () => {
       <Route path="/contact" element={<Contact />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} /> {/* Corrected route */}
+      <Route path="/manage-cars" element={<ManageCars />} /> {/* Corrected route */}
       <Route path="*" element={<NotFound />} />
     </Routes>
   );

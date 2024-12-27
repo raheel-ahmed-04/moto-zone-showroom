@@ -11,11 +11,14 @@ app.use(express.json());
 
 const connectDB = async () => {
   try {
-    await mongoose.connect("mongodb://localhost:27017/motozone", {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    });
-    console.log(`The DB is connected with ${mongoose.connection.host}`);
+    await mongoose.connect(
+      "mongodb+srv://raheel:raheel724@cluster0.farsr.mongodb.net/motozone",
+      {
+        useNewUrlParser: true,
+        useUnifiedTopology: true,
+      }
+    );
+    console.log(`The DB is connected with ${port}`);
   } catch (error) {
     console.error("DB connection error:", error);
   }
@@ -23,7 +26,7 @@ const connectDB = async () => {
 
 connectDB();
 
-app.post("/submitregisterform", async (req, res) => {
+app.post("/register", async (req, res) => {
   const { cnic, name, email, address, phoneNumber, fatherName, password } =
     req.body;
   try {
@@ -56,16 +59,7 @@ app.post("/login", async (req, res) => {
       return res.status(400).json({ message: "Invalid credentials" });
     }
 
-    const payload = { user: { id: user.id } };
-    jwt.sign(
-      payload,
-      "your_jwt_secret", // Replace with your JWT secret
-      { expiresIn: 3600 },
-      (err, token) => {
-        if (err) throw err;
-        res.json({ token });
-      }
-    );
+    res.status(201).json({ message: "User Login successfully" });
   } catch (error) {
     res.status(500).json({ message: "Error logging in", error });
   }

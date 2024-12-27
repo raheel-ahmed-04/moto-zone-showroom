@@ -87,8 +87,8 @@ const Header = () => {
             </Col>
 
             <Col lg="4" md="4" sm="4" className="d-flex align-items-center justify-content-end">
-              <button className="header__btn btn">
-                <Link to="/contact">
+              <button className="header__btn btn" style={{ backgroundColor: "#ffc107" }}>
+                <Link to="/contact" style={{ color: "inherit" }}>
                   <i className="ri-phone-line"></i> Request a call
                 </Link>
               </button>
