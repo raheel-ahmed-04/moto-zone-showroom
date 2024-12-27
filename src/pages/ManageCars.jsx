@@ -1,3 +1,4 @@
+// src/pages/ManageCars.jsx
 import React, { useState, useEffect } from "react";
 import {
   Container,
@@ -15,7 +16,6 @@ const ManageCars = () => {
   const [cars, setCars] = useState([]);
   const [newCar, setNewCar] = useState({
     carName: "",
-    imgUrl: "",
     price: "",
     rating: "",
     description: "",
@@ -26,9 +26,11 @@ const ManageCars = () => {
     seatType: "",
     brand: "",
   });
+  // We'll store the file here
+  const [imageFile, setImageFile] = useState(null);
   const [editingCar, setEditingCar] = useState(null);
 
-  // Fetch cars from the database
+  // Fetch cars from backend
   useEffect(() => {
     const fetchCars = async () => {
       try {
@@ -41,54 +43,20 @@ const ManageCars = () => {
     fetchCars();
   }, []);
 
-  const handleDelete = async (id) => {
-    try {
-      await axios.delete(`http://localhost:2000/api/cars/${id}`);
-      setCars(cars.filter((car) => car._id !== id));
-    } catch (error) {
-      console.error("Error deleting car:", error);
-    }
-  };
-
+  // Text field changes
   const handleChange = (e) => {
     const { name, value } = e.target;
     setNewCar({ ...newCar, [name]: value });
   };
 
-  const handleAdd = async () => {
-    try {
-      if (editingCar) {
-        const { data } = await axios.put(
-          `http://localhost:2000/api/cars/${editingCar._id}`,
-          newCar
-        );
-        setCars(
-          cars.map((car) =>
-            car._id === editingCar._id ? data.updatedCar : car
-          )
-        );
-      } else {
-        const { data } = await axios.post(
-          "http://localhost:2000/api/cars",
-          newCar
-        );
-        setCars([...cars, data.car]);
-      }
-      resetForm();
-    } catch (error) {
-      console.error("Error adding/updating car:", error);
-    }
-  };
-
-  const handleEdit = (car) => {
-    setNewCar(car);
-    setEditingCar(car);
+  // File field changes
+  const handleFileChange = (e) => {
+    setImageFile(e.target.files[0]); // The file object
   };
 
   const resetForm = () => {
     setNewCar({
       carName: "",
-      imgUrl: "",
       price: "",
       rating: "",
       description: "",
@@ -99,7 +67,89 @@ const ManageCars = () => {
       seatType: "",
       brand: "",
     });
+    setImageFile(null);
     setEditingCar(null);
+  };
+
+  // Add or update car
+  const handleAddOrUpdateCar = async () => {
+    try {
+      // We use FormData to send both text fields + file
+      const formData = new FormData();
+      formData.append("carName", newCar.carName);
+      formData.append("price", newCar.price);
+      formData.append("rating", newCar.rating);
+      formData.append("description", newCar.description);
+      formData.append("model", newCar.model);
+      formData.append("automatic", newCar.automatic);
+      formData.append("speed", newCar.speed);
+      formData.append("gps", newCar.gps);
+      formData.append("seatType", newCar.seatType);
+      formData.append("brand", newCar.brand);
+
+      // Append file if selected
+      if (imageFile) {
+        formData.append("image", imageFile);
+      }
+
+      if (editingCar) {
+        // Update existing car
+        const { data } = await axios.put(
+          `http://localhost:2000/api/cars/${editingCar._id}`,
+          formData,
+          {
+            headers: { "Content-Type": "multipart/form-data" },
+          }
+        );
+        // Replace old car data with updated data
+        setCars((prev) =>
+          prev.map((car) =>
+            car._id === editingCar._id ? data.updatedCar : car
+          )
+        );
+      } else {
+        // Add new car
+        const { data } = await axios.post(
+          "http://localhost:2000/api/cars",
+          formData,
+          {
+            headers: { "Content-Type": "multipart/form-data" },
+          }
+        );
+        setCars((prev) => [...prev, data.car]);
+      }
+      resetForm();
+    } catch (error) {
+      console.error("Error adding/updating car:", error);
+    }
+  };
+
+  // Enter edit mode
+  const handleEdit = (car) => {
+    setNewCar({
+      carName: car.carName || "",
+      price: car.price || "",
+      rating: car.rating || "",
+      description: car.description || "",
+      model: car.model || "",
+      automatic: car.automatic || "",
+      speed: car.speed || "",
+      gps: car.gps || "",
+      seatType: car.seatType || "",
+      brand: car.brand || "",
+    });
+    setImageFile(null);
+    setEditingCar(car);
+  };
+
+  // Delete a car
+  const handleDelete = async (id) => {
+    try {
+      await axios.delete(`http://localhost:2000/api/cars/${id}`);
+      setCars((prev) => prev.filter((car) => car._id !== id));
+    } catch (error) {
+      console.error("Error deleting car:", error);
+    }
   };
 
   return (
@@ -117,15 +167,13 @@ const ManageCars = () => {
                 onChange={handleChange}
               />
             </FormGroup>
+
+            {/* File Input for Image */}
             <FormGroup>
-              <Label for="imgUrl">Image URL</Label>
-              <Input
-                type="text"
-                name="imgUrl"
-                value={newCar.imgUrl}
-                onChange={handleChange}
-              />
+              <Label for="image">Car Image</Label>
+              <Input type="file" name="image" onChange={handleFileChange} />
             </FormGroup>
+
             <FormGroup>
               <Label for="price">Price</Label>
               <Input
@@ -207,39 +255,52 @@ const ManageCars = () => {
                 onChange={handleChange}
               />
             </FormGroup>
+
             <Button
-              onClick={handleAdd}
-              style={{ backgroundColor: "#ffc107", marginRight: "10px" }}
+              color="warning"
+              style={{ marginRight: "10px" }}
+              onClick={handleAddOrUpdateCar}
             >
               {editingCar ? "Update Car" : "Add Car"}
             </Button>
             {editingCar && (
-              <Button
-                onClick={resetForm}
-                style={{ backgroundColor: "#ffc107" }}
-              >
+              <Button color="warning" onClick={resetForm}>
                 Cancel
               </Button>
             )}
           </Form>
         </Col>
+
         <Col lg="6">
           <h2>Manage Cars</h2>
           {cars.map((car) => (
             <div key={car._id} style={{ marginBottom: "10px" }}>
               <h5>{car.carName}</h5>
-              <Button
-                onClick={() => handleEdit(car)}
-                style={{ backgroundColor: "#ffc107", marginRight: "10px" }}
-              >
-                Edit
-              </Button>
-              <Button
-                onClick={() => handleDelete(car._id)}
-                style={{ backgroundColor: "black", color: "white" }}
-              >
-                Delete
-              </Button>
+
+              {/* Show uploaded image if exists */}
+              {car.imgUrl && (
+                <img
+                  src={`http://localhost:2000${car.imgUrl}`}
+                  alt={car.carName}
+                  style={{ width: "100px", height: "60px", objectFit: "cover" }}
+                />
+              )}
+              <div style={{ marginTop: "5px" }}>
+                <Button
+                  color="warning"
+                  style={{ marginRight: "10px" }}
+                  onClick={() => handleEdit(car)}
+                >
+                  Edit
+                </Button>
+                <Button
+                  color="dark"
+                  style={{ color: "white" }}
+                  onClick={() => handleDelete(car._id)}
+                >
+                  Delete
+                </Button>
+              </div>
             </div>
           ))}
         </Col>
