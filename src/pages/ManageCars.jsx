@@ -280,7 +280,7 @@ const ManageCars = () => {
               {/* Show uploaded image if exists */}
               {car.imgUrl && (
                 <img
-                  src={`http://localhost:2000${car.imgUrl}`}
+                  src={`${car.imgUrl}`}
                   alt={car.carName}
                   style={{ width: "100px", height: "60px", objectFit: "cover" }}
                 />

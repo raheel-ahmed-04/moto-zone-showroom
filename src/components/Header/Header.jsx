@@ -49,7 +49,10 @@ const Header = () => {
                 <Link to="/login" className="d-flex align-items-center gap-1">
                   <i className="ri-login-circle-line"></i> Login
                 </Link>
-                <Link to="/register" className="d-flex align-items-center gap-1">
+                <Link
+                  to="/register"
+                  className="d-flex align-items-center gap-1"
+                >
                   <i className="ri-user-line"></i> Register
                 </Link>
               </div>
@@ -86,8 +89,16 @@ const Header = () => {
               </div>
             </Col>
 
-            <Col lg="4" md="4" sm="4" className="d-flex align-items-center justify-content-end">
-              <button className="header__btn btn" style={{ backgroundColor: "#ffc107" }}>
+            <Col
+              lg="4"
+              md="4"
+              sm="4"
+              className="d-flex align-items-center justify-content-end"
+            >
+              <button
+                className="header__btn btn"
+                style={{ backgroundColor: "#ffc107" }}
+              >
                 <Link to="/contact" style={{ color: "inherit" }}>
                   <i className="ri-phone-line"></i> Request a call
                 </Link>

@@ -1,5 +1,5 @@
-import React from "react";
-
+import React, { useState, useEffect } from "react";
+import axios from "axios";
 import HeroSlider from "../components/UI/HeroSlider";
 import Helmet from "../components/Helmet/Helmet";
 
@@ -15,6 +15,19 @@ import Testimonial from "../components/UI/Testimonial";
 import BlogList from "../components/UI/BlogList";
 
 const Home = () => {
+  const [cars, setCars] = useState([]);
+  useEffect(() => {
+    const fetchCars = async () => {
+      try {
+        // Replace "http://localhost:2000" with your backend server URL/port
+        const { data } = await axios.get("http://localhost:2000/api/cars");
+        setCars(data);
+      } catch (error) {
+        console.error("Error fetching cars:", error);
+      }
+    };
+    fetchCars();
+  }, []);
   return (
     <Helmet title="Home">
       {/* ============= hero section =========== */}
@@ -61,7 +74,7 @@ const Home = () => {
               <h2 className="section__title">Hot Offers</h2>
             </Col>
 
-            {carData.slice(0, 6).map((item) => (
+            {cars.slice(0, 6).map((item) => (
               <CarItem item={item} key={item.id} />
             ))}
           </Row>

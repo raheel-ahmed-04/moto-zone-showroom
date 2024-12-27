@@ -1,14 +1,28 @@
-//carlisting.jsx
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Container, Row, Col, Button } from "reactstrap";
 import Helmet from "../components/Helmet/Helmet";
 import CommonSection from "../components/UI/CommonSection";
 import CarItem from "../components/UI/CarItem";
-import carData from "../assets/data/carData";
 import { useNavigate } from "react-router-dom";
+import axios from "axios"; // <-- For making HTTP requests
 
 const CarListing = () => {
+  const [cars, setCars] = useState([]);
   const navigate = useNavigate();
+
+  // Fetch cars from the backend on component mount
+  useEffect(() => {
+    const fetchCars = async () => {
+      try {
+        // Replace "http://localhost:2000" with your backend server URL/port
+        const { data } = await axios.get("http://localhost:2000/api/cars");
+        setCars(data);
+      } catch (error) {
+        console.error("Error fetching cars:", error);
+      }
+    };
+    fetchCars();
+  }, []);
 
   const handleManageCars = () => {
     navigate("/manage-cars");
@@ -17,7 +31,6 @@ const CarListing = () => {
   return (
     <Helmet title="Cars">
       <CommonSection title="Car Listing" />
-
       <section>
         <Container>
           <Row>
@@ -26,7 +39,6 @@ const CarListing = () => {
                 <span className="d-flex align-items-center gap-2">
                   <i className="ri-sort-asc"></i> Sort By
                 </span>
-
                 <select>
                   <option>Select</option>
                   <option value="low">Low to High</option>
@@ -37,8 +49,9 @@ const CarListing = () => {
               </div>
             </Col>
 
-            {carData.map((item) => (
-              <CarItem item={item} key={item.id} />
+            {/* Render all fetched cars */}
+            {cars.map((item) => (
+              <CarItem item={item} key={item._id} />
             ))}
           </Row>
         </Container>
