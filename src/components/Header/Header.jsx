@@ -170,7 +170,7 @@ const Header = () => {
                 ))}
                 {currentUser && (
                   <NavLink
-                    to="./bookings-history"
+                    to="/bookings-history"
                     key="7"
                     className="nav__item"
                     activeClassName="nav__active"

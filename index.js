@@ -471,13 +471,23 @@ app.post("/api/bookings", async (req, res) => {
   }
 });
 
-/***GET: Fetch all bookings****/
-app.get("/api/bookings", async (req, res) => {
+/***  GET all bookings for a particular user name */
+app.get("/api/bookings/user/:username", async (req, res) => {
   try {
-    const allBookings = await Booking.find();
-    return res.status(200).json(allBookings);
+    const { username } = req.params;
+
+    // 1) Find the user by their name field
+    const user = await User.findOne({ name: username });
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // 2) Find bookings that reference this user's _id
+    const userBookings = await Booking.find({ user: user._id });
+
+    return res.status(200).json(userBookings);
   } catch (error) {
-    console.error("Error fetching bookings:", error);
+    console.error("Error fetching user's bookings:", error);
     return res.status(500).json({ message: "Error fetching bookings", error });
   }
 });

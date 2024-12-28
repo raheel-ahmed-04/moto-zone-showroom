@@ -9,6 +9,7 @@ import axios from "axios"; // <-- For making HTTP requests
 const CarListing = () => {
   const [cars, setCars] = useState([]);
   const navigate = useNavigate();
+  const [currentUser, setCurrentUser] = useState(null);
 
   // Fetch cars from the backend on component mount
   useEffect(() => {
@@ -22,6 +23,11 @@ const CarListing = () => {
       }
     };
     fetchCars();
+    // Check localStorage on mount
+    const storedUserName = localStorage.getItem("userName");
+    if (storedUserName) {
+      setCurrentUser(storedUserName);
+    }
   }, []);
 
   const handleManageCars = () => {
@@ -45,7 +51,9 @@ const CarListing = () => {
                   <option value="high">High to Low</option>
                 </select>
 
-                <Button onClick={handleManageCars}>Manage Cars</Button>
+                {currentUser && (
+                  <Button onClick={handleManageCars}>Manage Cars</Button>
+                )}
               </div>
             </Col>
 

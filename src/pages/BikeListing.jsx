@@ -9,6 +9,7 @@ import "../styles/BikeListing.css"; // Ensure you have this CSS file
 const BikeListing = () => {
   const [bikes, setBikes] = useState([]);
   const navigate = useNavigate();
+  const [currentUser, setCurrentUser] = useState(null);
 
   // Fetch bikes from the backend on component mount
   useEffect(() => {
@@ -22,6 +23,11 @@ const BikeListing = () => {
       }
     };
     fetchBikes();
+    // Check localStorage on mount
+    const storedUserName = localStorage.getItem("userName");
+    if (storedUserName) {
+      setCurrentUser(storedUserName);
+    }
   }, []);
 
   const handleManageBikes = () => {
@@ -47,7 +53,9 @@ const BikeListing = () => {
                   <option value="high">High to Low</option>
                 </select>
 
-                <Button onClick={handleManageBikes}>Manage Bikes</Button>
+                {currentUser && (
+                  <Button onClick={handleManageBikes}>Manage Bikes</Button>
+                )}
               </div>
             </Col>
 

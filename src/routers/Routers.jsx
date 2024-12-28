@@ -14,6 +14,7 @@ import Contact from "../pages/Contact";
 import Login from "../pages/login";
 import Register from "../pages/Register-page"; // Corrected import
 import ManageBikes from "../pages/ManageBikes";
+import BookingHistory from "../pages/BookingHistory";
 
 const Routers = () => {
   return (
@@ -32,8 +33,12 @@ const Routers = () => {
       <Route path="/contact" element={<Contact />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} /> {/* Corrected route */}
-      <Route path="/manage-cars" element={<ManageCars />} /> {/* Corrected route */} 
-      <Route path="/manage-bikes" element={<ManageBikes />} /> {/* Corrected route */} 
+      <Route path="/manage-cars" element={<ManageCars />} />{" "}
+      {/* Corrected route */}
+      <Route path="/manage-bikes" element={<ManageBikes />} />{" "}
+      {/* Corrected route */}
+      <Route path="/bookings-history" element={<BookingHistory />} />{" "}
+      {/* Corrected route */}
       <Route path="*" element={<NotFound />} />
     </Routes>
   );
