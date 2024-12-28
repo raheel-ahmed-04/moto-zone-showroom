@@ -109,13 +109,12 @@ app.post("/login", async (req, res) => {
     return res.status(200).json({
       message: "User login successful",
       userName: user.name,
-      isAdmin: isAdmin, 
+      isAdmin: isAdmin,
     });
   } catch (error) {
     return res.status(500).json({ message: "Error logging in", error });
   }
 });
-
 
 /**GET user by name**/
 app.get("/api/users/name/:name", async (req, res) => {
@@ -434,7 +433,6 @@ app.get("/api/bikes/slug/:slug", async (req, res) => {
   }
 });
 
-
 /* =====================================================
    ============== BOOKING ROUTES =========================
    ===================================================== */
@@ -444,6 +442,8 @@ app.post("/api/bookings", async (req, res) => {
   try {
     const {
       userId,
+      vehicleRef, // _id of the car or bike
+      vehicleRefModel, // "Car" or "Bike"
       firstName,
       lastName,
       email,
@@ -455,6 +455,8 @@ app.post("/api/bookings", async (req, res) => {
 
     const newBooking = new Booking({
       user: userId,
+      vehicleRef, // e.g. "63f9db5...someCarOrBikeId"
+      vehicleRefModel, // "Car" or "Bike"
       firstName,
       lastName,
       email,
@@ -481,14 +483,17 @@ app.get("/api/bookings/user/:username", async (req, res) => {
   try {
     const { username } = req.params;
 
-    // 1) Find the user by their name field
+    // Find the user by their name
     const user = await User.findOne({ name: username });
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
 
-    // 2) Find bookings that reference this user's _id
-    const userBookings = await Booking.find({ user: user._id });
+    // Populate vehicleRef (Car or Bike)
+    const userBookings = await Booking.find({ user: user._id }).populate({
+      path: "vehicleRef",
+      select: "carName bikeName model price", // Only fetch necessary fields
+    });
 
     return res.status(200).json(userBookings);
   } catch (error) {
@@ -496,7 +501,6 @@ app.get("/api/bookings/user/:username", async (req, res) => {
     return res.status(500).json({ message: "Error fetching bookings", error });
   }
 });
-
 
 /* =====================================================
    ============== DEFAULT ROUTE =========================

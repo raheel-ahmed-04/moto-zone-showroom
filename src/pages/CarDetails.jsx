@@ -79,7 +79,10 @@ const CarDetails = () => {
                   style={{ columnGap: "4rem" }}
                 >
                   <span className="d-flex align-items-center gap-1 section__description">
-                    <i className="ri-roadster-line" style={{ color: "#f9a826" }}></i>{" "}
+                    <i
+                      className="ri-roadster-line"
+                      style={{ color: "#f9a826" }}
+                    ></i>{" "}
                     {car.model}
                   </span>
 
@@ -105,7 +108,10 @@ const CarDetails = () => {
                   style={{ columnGap: "2.8rem" }}
                 >
                   <span className="d-flex align-items-center gap-1 section__description">
-                    <i className="ri-map-pin-line" style={{ color: "#f9a826" }}></i>{" "}
+                    <i
+                      className="ri-map-pin-line"
+                      style={{ color: "#f9a826" }}
+                    ></i>{" "}
                     {car.gps}
                   </span>
 
@@ -131,7 +137,10 @@ const CarDetails = () => {
             <Col lg="7" className="mt-5">
               <div className="booking-info mt-5">
                 <h5 className="mb-4 fw-bold">Purchase Information</h5>
-                <BookingForm />
+                <BookingForm
+                  vehicleRef={car._id} // The car's Mongo _id
+                  vehicleRefModel="Car" // EXACT model name in Mongoose
+                />
               </div>
             </Col>
           </Row>

@@ -58,13 +58,29 @@ const bikeSchema = new mongoose.Schema({
   description: { type: String, required: true },
 });
 
-/* --------------------- BOOKING SCHEMA --------------------- */
+//* --------------------- BOOKING SCHEMA --------------------- */
 const bookingSchema = new mongoose.Schema({
   user: { 
     type: mongoose.Schema.Types.ObjectId, 
     ref: "User",
     required: true 
   },
+
+  // Polymorphic reference to either Car or Bike
+  vehicleRef: {
+    type: mongoose.Schema.Types.ObjectId,
+    required: true,
+    // "refPath" tells Mongoose the model to use is stored in vehicleRefModel
+    refPath: "vehicleRefModel",
+  },
+
+  // This field determines which Mongoose model the vehicleRef references
+  vehicleRefModel: {
+    type: String,
+    required: true,
+    enum: ["Car", "Bike"], // must match your model names exactly
+  },
+
   firstName: { type: String, required: true },
   lastName: { type: String, required: true },
   email: { type: String, required: true },
@@ -74,6 +90,7 @@ const bookingSchema = new mongoose.Schema({
   paymentMethod: { type: String, required: true }, 
   createdAt: { type: Date, default: Date.now },
 });
+
 
 
 /* --------------------- EXPORT MODELS --------------------- */

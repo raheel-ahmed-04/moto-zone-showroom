@@ -80,7 +80,10 @@ const BikeDetails = () => {
             </Col>
 
             <Col lg="7" className="mt-5">
-              <BookingForm />
+              <BookingForm
+                vehicleRef={bike._id} // The bike's Mongo _id
+                vehicleRefModel="Bike"
+              />
             </Col>
           </Row>
         </Container>

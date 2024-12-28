@@ -6,9 +6,9 @@ import "../../styles/booking-form.css";
 import masterCard from "../../assets/all-images/master-card.jpg";
 import paypal from "../../assets/all-images/paypal.jpg";
 
-const BookingForm = () => {
+const BookingForm = ({ vehicleRef, vehicleRefModel }) => {
   const [bookingData, setBookingData] = useState({
-    userId: "",        // We'll store the DB _id of the user here
+    userId: "",
     firstName: "",
     lastName: "",
     email: "",
@@ -16,30 +16,24 @@ const BookingForm = () => {
     toAddress: "",
     notes: "",
   });
-
   const [selectedMethod, setSelectedMethod] = useState("");
 
-  // 1) On mount, fetch user by name from localStorage
+  // On mount, fetch user from localStorage (like you already do)
   useEffect(() => {
     const userName = localStorage.getItem("userName");
-    if (!userName) return; // user not logged in
-
-    // Example: GET /api/users/name/:name
+    if (!userName) return;
     axios
       .get(`http://localhost:2000/api/users/name/${userName}`)
       .then((res) => {
-        const user = res.data; 
-        // user = { _id, name, email, address, phoneNumber, ... }
-
-        // Populate bookingData
+        const user = res.data;
         setBookingData((prev) => ({
           ...prev,
-          userId: user._id,  // store the user ID
-          firstName: user.name.split(" ")[0] || user.name, // or parse differently
-          lastName: "",      // We only have user.name, so lastName is blank (unless you stored it separately)
+          userId: user._id,
+          firstName: user.name.split(" ")[0] || user.name,
+          lastName: "", // or parse differently
           email: user.email,
           phone: user.phoneNumber,
-          toAddress: user.address, // Assuming 'address' is the toAddress (adjust logic)
+          toAddress: user.address,
         }));
       })
       .catch((err) => {
@@ -47,26 +41,20 @@ const BookingForm = () => {
       });
   }, []);
 
-  // 2) Handle changes to text fields
   const handleInputChange = (e) => {
-    setBookingData({
-      ...bookingData,
-      [e.target.name]: e.target.value,
-    });
+    setBookingData({ ...bookingData, [e.target.name]: e.target.value });
   };
 
-  // 3) Handle radio change for payment methods
   const handlePaymentChange = (event) => {
     setSelectedMethod(event.target.value);
   };
 
-  // 4) Submit booking
   const submitHandler = (event) => {
     event.preventDefault();
-
-    // Construct booking object
     const payload = {
       userId: bookingData.userId,
+      vehicleRef,          // from props
+      vehicleRefModel,     // from props: "Car" or "Bike"
       firstName: bookingData.firstName,
       lastName: bookingData.lastName,
       email: bookingData.email,
@@ -81,9 +69,6 @@ const BookingForm = () => {
       .then((res) => {
         console.log("Booking created:", res.data);
         alert("Booking successful!");
-        // Optionally reset the form:
-        // setBookingData({ ... });
-        // setSelectedMethod("");
       })
       .catch((err) => {
         console.error("Error creating booking:", err);
