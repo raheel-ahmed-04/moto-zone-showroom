@@ -17,23 +17,31 @@ const Login = () => {
   const [formData, setFormData] = useState({
     email: "",
     password: "",
+    isAdmin: false, // NEW admin field
   });
   const navigate = useNavigate();
   const [errorMessage, setErrorMessage] = useState("");
 
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.id]: e.target.value });
+    const { id, value, type, checked } = e.target;
+    if (type === "checkbox") {
+      // If it's a checkbox, handle boolean
+      setFormData({ ...formData, [id]: checked });
+    } else {
+      setFormData({ ...formData, [id]: value });
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
+      // Include isAdmin in the request body
       const response = await axios.post(
         "http://localhost:2000/login",
         formData
       );
 
-      // Example: { message: "User login successful", userName: "John Doe" }
+      // Example: { message: "User login successful", userName: "John Doe", isAdmin: true/false }
       console.log("Login Response:", response.data);
 
       // Store the name in localStorage
@@ -41,8 +49,21 @@ const Login = () => {
         localStorage.setItem("userName", response.data.userName);
       }
 
-      // Redirect to the homepage or dashboard
-      navigate("/home");
+      // If the backend returns isAdmin = true, store that too (optional)
+      if (response.data?.isAdmin) {
+        localStorage.setItem("isAdmin", "true");
+      } else {
+        localStorage.removeItem("isAdmin"); // or set to "false"
+      }
+
+      // Redirect to homepage or admin dashboard
+      if (response.data?.isAdmin) {
+        // If user is an admin, maybe navigate them to an admin panel
+        navigate("/home");
+      } else {
+        // Otherwise, regular user goes to /home
+        navigate("/home");
+      }
     } catch (error) {
       // If there's a server response with status 400, display the message
       if (error.response && error.response.status === 400) {
@@ -97,9 +118,23 @@ const Login = () => {
                   onChange={handleChange}
                 />
               </FormGroup>
+
+              {/* NEW Admin Checkbox */}
+              <FormGroup check className="mb-3">
+                <Input
+                  type="checkbox"
+                  id="isAdmin"
+                  checked={formData.isAdmin}
+                  onChange={handleChange}
+                />
+                <Label check htmlFor="isAdmin">
+                  Are you an admin?
+                </Label>
+              </FormGroup>
+
               <Button type="submit">Login</Button>
             </Form>
-            <div className="register-link">
+            <div className="register-link mt-2">
               <span>Don't have an account? </span>
               <Link to="/register">Register here</Link>
             </div>

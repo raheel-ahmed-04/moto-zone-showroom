@@ -10,6 +10,7 @@ const CarListing = () => {
   const [cars, setCars] = useState([]);
   const navigate = useNavigate();
   const [currentUser, setCurrentUser] = useState(null);
+  const [admin, setAdmin] = useState(false);
 
   // Fetch cars from the backend on component mount
   useEffect(() => {
@@ -25,8 +26,12 @@ const CarListing = () => {
     fetchCars();
     // Check localStorage on mount
     const storedUserName = localStorage.getItem("userName");
+    const isAdmin = localStorage.getItem("isAdmin") === "true";
     if (storedUserName) {
       setCurrentUser(storedUserName);
+    }
+    if (isAdmin) {
+      setAdmin(isAdmin);
     }
   }, []);
 
@@ -51,7 +56,7 @@ const CarListing = () => {
                   <option value="high">High to Low</option>
                 </select>
 
-                {currentUser && (
+                {currentUser && admin && (
                   <Button onClick={handleManageCars}>Manage Cars</Button>
                 )}
               </div>

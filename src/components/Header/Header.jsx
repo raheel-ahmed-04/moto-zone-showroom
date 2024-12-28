@@ -34,12 +34,17 @@ const Header = () => {
   const location = useLocation(); // Watch for route changes
   const navigate = useNavigate();
   const [currentUser, setCurrentUser] = useState(null);
+  const [admin, setAdmin] = useState(false);
 
   useEffect(() => {
     // Check localStorage on mount
     const storedUserName = localStorage.getItem("userName");
+    const isAdmin = localStorage.getItem("isAdmin") === "true";
     if (storedUserName) {
       setCurrentUser(storedUserName);
+    }
+    if (isAdmin) {
+      setAdmin(isAdmin);
     }
   }, [location]);
 
@@ -71,6 +76,7 @@ const Header = () => {
                       <i className="ri-user-line"></i>
                       Welcome, {currentUser}
                     </span>
+                    {admin && <span>(Admin)</span>}
                     <Link
                       to="/login"
                       onClick={handleLogout}

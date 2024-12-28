@@ -10,6 +10,7 @@ const BikeListing = () => {
   const [bikes, setBikes] = useState([]);
   const navigate = useNavigate();
   const [currentUser, setCurrentUser] = useState(null);
+  const [admin, setAdmin] = useState(false);
 
   // Fetch bikes from the backend on component mount
   useEffect(() => {
@@ -25,8 +26,12 @@ const BikeListing = () => {
     fetchBikes();
     // Check localStorage on mount
     const storedUserName = localStorage.getItem("userName");
+    const isAdmin = localStorage.getItem("isAdmin") === "true";
     if (storedUserName) {
       setCurrentUser(storedUserName);
+    }
+    if (isAdmin) {
+      setAdmin(isAdmin);
     }
   }, []);
 
@@ -53,7 +58,7 @@ const BikeListing = () => {
                   <option value="high">High to Low</option>
                 </select>
 
-                {currentUser && (
+                {currentUser && admin && (
                   <Button onClick={handleManageBikes}>Manage Bikes</Button>
                 )}
               </div>

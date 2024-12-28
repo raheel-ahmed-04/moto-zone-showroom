@@ -103,14 +103,19 @@ app.post("/login", async (req, res) => {
       return res.status(400).json({ message: "Invalid credentials" });
     }
 
-    // Return the user's name as well
-    return res
-      .status(200)
-      .json({ message: "User login successful", userName: user.name });
+    // Check if role is "admin"
+    const isAdmin = user.role === "admin";
+
+    return res.status(200).json({
+      message: "User login successful",
+      userName: user.name,
+      isAdmin: isAdmin, 
+    });
   } catch (error) {
     return res.status(500).json({ message: "Error logging in", error });
   }
 });
+
 
 /**GET user by name**/
 app.get("/api/users/name/:name", async (req, res) => {

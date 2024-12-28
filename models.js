@@ -11,6 +11,12 @@ const userSchema = new mongoose.Schema({
   phoneNumber: { type: String, required: true },
   fatherName: { type: String },
   password: { type: String, required: true },
+  
+  role: {
+    type: String,
+    enum: ["admin", "user"], // or add more roles if needed
+    default: "user",
+  },
 });
 
 // Automatically hash password before saving
