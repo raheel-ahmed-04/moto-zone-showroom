@@ -82,9 +82,6 @@ const BikeDetails = () => {
             <Col lg="7" className="mt-5">
               <BookingForm />
             </Col>
-            <Col lg="5" className="mt-5">
-              <PaymentMethod />
-            </Col>
           </Row>
         </Container>
       </section>

@@ -1,42 +1,52 @@
-// index.js
 import express from "express";
 import mongoose from "mongoose";
 import cors from "cors";
-import bcrypt from "bcrypt";
+import bcrypt from "bcryptjs";
 import multer from "multer";
 import path from "path";
 import { fileURLToPath } from "url";
-import { User, Car } from "./models.js"; // Update path if needed
+
+import { User, Car, Bike, Booking } from "./models.js";
 
 const app = express();
-const port = 2000;
+// Use 5173 or any free port
+const port = process.env.PORT || 2000;
 
-// 1) Fix __dirname for ES modules
+/* -----------------------------------------------------
+   1) FIX __dirname for ES modules (so we can serve static files)
+----------------------------------------------------- */
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// 2) Serve the uploads folder as static
-//    So that http://localhost:2000/uploads/<filename> can serve images
+/* -----------------------------------------------------
+   2) SERVE IMAGES FROM "public/uploads"
+----------------------------------------------------- */
 app.use("/uploads", express.static(path.join(__dirname, "public", "uploads")));
 
-// 3) Configure Multer to store images in "public/uploads/"
+/* -----------------------------------------------------
+   3) CONFIGURE MULTER TO HANDLE FILE UPLOADS
+      (Storing files in "public/uploads")
+----------------------------------------------------- */
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, path.join(__dirname, "public", "uploads")); // Folder to store images
+    cb(null, path.join("public", "uploads"));
   },
   filename: (req, file, cb) => {
-    // Create a unique filename; e.g. 1691862034567-myphoto.png
     const uniqueName = Date.now() + "-" + file.originalname;
     cb(null, uniqueName);
   },
 });
 const upload = multer({ storage });
 
-// Middlewares
+/* -----------------------------------------------------
+   4) MIDDLEWARE
+----------------------------------------------------- */
 app.use(cors());
 app.use(express.json());
 
-// Connect to MongoDB
+/* -----------------------------------------------------
+   5) CONNECT TO MONGO
+----------------------------------------------------- */
 const connectDB = async () => {
   try {
     await mongoose.connect(
@@ -46,19 +56,22 @@ const connectDB = async () => {
         useUnifiedTopology: true,
       }
     );
-    console.log("DB connected successfully");
+    console.log(`DB connected successfully. Running on port: ${port}`);
   } catch (error) {
     console.error("DB connection error:", error);
   }
 };
 connectDB();
 
-/* ---------------- USER ROUTES ---------------- */
+/* =====================================================
+   ============== USER ROUTES (Register/Login) ==========
+   ===================================================== */
+
+/** REGISTER */
 app.post("/register", async (req, res) => {
   const { cnic, name, email, address, phoneNumber, fatherName, password } =
     req.body;
   try {
-    const hashedPassword = await bcrypt.hash(password, 10);
     const newUser = new User({
       cnic,
       name,
@@ -66,15 +79,17 @@ app.post("/register", async (req, res) => {
       address,
       phoneNumber,
       fatherName,
-      password: hashedPassword,
+      // password automatically hashed by userSchema.pre('save')
+      password,
     });
     await newUser.save();
-    res.status(200).json({ message: "User registered successfully" });
+    return res.status(201).json({ message: "User registered successfully" });
   } catch (error) {
-    res.status(500).json({ message: "Error saving user", error });
+    return res.status(500).json({ message: "Error saving user", error });
   }
 });
 
+/** LOGIN */
 app.post("/login", async (req, res) => {
   const { email, password } = req.body;
   try {
@@ -82,31 +97,59 @@ app.post("/login", async (req, res) => {
     if (!user) {
       return res.status(400).json({ message: "User not found" });
     }
+
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
       return res.status(400).json({ message: "Invalid credentials" });
     }
-    res.status(200).json({ message: "User Login successfully" });
+
+    // Return the user's name as well
+    return res
+      .status(200)
+      .json({ message: "User login successful", userName: user.name });
   } catch (error) {
-    res.status(500).json({ message: "Error logging in", error });
+    return res.status(500).json({ message: "Error logging in", error });
   }
 });
 
-/* ---------------- CAR ROUTES ---------------- */
+/**GET user by name**/
+app.get("/api/users/name/:name", async (req, res) => {
+  try {
+    const userName = req.params.name;
+    const user = await User.findOne({ name: userName });
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    return res.json(user);
+  } catch (error) {
+    console.error("Error fetching user:", error);
+    return res.status(500).json({ message: "Server error" });
+  }
+});
 
-// GET all cars
+/* =====================================================
+   ============== CAR ROUTES (with image upload) ========
+   ===================================================== */
+
+/**
+ * GET: Fetch all cars
+ */
 app.get("/api/cars", async (req, res) => {
   try {
     const cars = await Car.find();
-    res.status(200).json(cars);
+    return res.status(200).json(cars);
   } catch (error) {
-    res.status(500).json({ message: "Error fetching cars", error });
+    return res.status(500).json({ message: "Error fetching cars", error });
   }
 });
 
-// CREATE a new car (with file upload)
+/**
+ * POST: Add a new car (with optional image)
+ * - Use `upload.single("image")` to handle file upload from field name "image"
+ */
 app.post("/api/cars", upload.single("image"), async (req, res) => {
   try {
+    // Grab other fields from req.body
     const {
       carName,
       price,
@@ -120,15 +163,16 @@ app.post("/api/cars", upload.single("image"), async (req, res) => {
       brand,
     } = req.body;
 
-    // If the file was uploaded, store the relative path in DB (e.g. "/uploads/12345-someimage.png")
+    // If an image was uploaded, store its relative path in imgUrl
     let imgUrl = "";
     if (req.file) {
       imgUrl = "/uploads/" + req.file.filename;
     }
 
+    // Create Car instance
     const newCar = new Car({
       carName,
-      imgUrl, // Image path
+      imgUrl,
       price,
       rating,
       description,
@@ -141,13 +185,17 @@ app.post("/api/cars", upload.single("image"), async (req, res) => {
     });
 
     await newCar.save();
-    res.status(201).json({ message: "Car added successfully", car: newCar });
+    return res
+      .status(201)
+      .json({ message: "Car added successfully", car: newCar });
   } catch (error) {
-    res.status(500).json({ message: "Error adding car", error });
+    return res.status(500).json({ message: "Error adding car", error });
   }
 });
 
-// UPDATE a car (with optional new image)
+/**
+ * PUT: Update existing car (with optional new image)
+ */
 app.put("/api/cars/:id", upload.single("image"), async (req, res) => {
   try {
     const { id } = req.params;
@@ -164,6 +212,7 @@ app.put("/api/cars/:id", upload.single("image"), async (req, res) => {
       brand,
     } = req.body;
 
+    // If user uploaded a new file, set a new imgUrl
     let updatedFields = {
       carName,
       price,
@@ -177,7 +226,6 @@ app.put("/api/cars/:id", upload.single("image"), async (req, res) => {
       brand,
     };
 
-    // If the user uploads a new image, update the imgUrl
     if (req.file) {
       updatedFields.imgUrl = "/uploads/" + req.file.filename;
     }
@@ -185,18 +233,21 @@ app.put("/api/cars/:id", upload.single("image"), async (req, res) => {
     const updatedCar = await Car.findByIdAndUpdate(id, updatedFields, {
       new: true,
     });
-
     if (!updatedCar) {
       return res.status(404).json({ message: "Car not found" });
     }
 
-    res.status(200).json({ message: "Car updated successfully", updatedCar });
+    return res
+      .status(200)
+      .json({ message: "Car updated successfully", updatedCar });
   } catch (error) {
-    res.status(500).json({ message: "Error updating car", error });
+    return res.status(500).json({ message: "Error updating car", error });
   }
 });
 
-// DELETE a car
+/**
+ * DELETE: Remove a car by ID
+ */
 app.delete("/api/cars/:id", async (req, res) => {
   try {
     const { id } = req.params;
@@ -204,16 +255,244 @@ app.delete("/api/cars/:id", async (req, res) => {
     if (!deletedCar) {
       return res.status(404).json({ message: "Car not found" });
     }
-    res.status(200).json({ message: "Car deleted successfully", deletedCar });
+    return res
+      .status(200)
+      .json({ message: "Car deleted successfully", deletedCar });
   } catch (error) {
-    res.status(500).json({ message: "Error deleting car", error });
+    return res.status(500).json({ message: "Error deleting car", error });
   }
 });
 
-app.get("/", (req, res) => {
-  res.send("Hello from the backend!");
+// GET a single car by slug
+app.get("/api/cars/slug/:slug", async (req, res) => {
+  try {
+    const { slug } = req.params;
+    const car = await Car.findOne({ carName: slug });
+    if (!car) {
+      return res.status(404).json({ message: "Car not found" });
+    }
+    res.json(car);
+  } catch (error) {
+    console.error("Error fetching car:", error);
+    res.status(500).json({ message: "Server error" });
+  }
 });
 
+/* =====================================================
+   ============== BIKE ROUTES (with image upload) =======
+   ===================================================== */
+
+/**
+ * GET: Fetch all bikes
+ */
+app.get("/api/bikes", async (req, res) => {
+  try {
+    const bikes = await Bike.find();
+    return res.status(200).json(bikes);
+  } catch (error) {
+    return res.status(500).json({ message: "Error fetching bikes", error });
+  }
+});
+
+/**
+ * POST: Add a new bike (with optional image)
+ */
+app.post("/api/bikes", upload.single("image"), async (req, res) => {
+  try {
+    // Grab other fields from req.body
+    const {
+      bikeName,
+      brand,
+      rating,
+      price,
+      speed,
+      gps,
+      seatType,
+      automatic,
+      model,
+      description,
+    } = req.body;
+
+    let imgUrl = "";
+    if (req.file) {
+      imgUrl = "/uploads/" + req.file.filename;
+    }
+
+    // Create Bike instance
+    const newBike = new Bike({
+      bikeName,
+      brand,
+      rating,
+      price,
+      speed,
+      gps,
+      seatType,
+      automatic,
+      model,
+      description,
+      imgUrl,
+    });
+
+    await newBike.save();
+    return res
+      .status(201)
+      .json({ message: "Bike added successfully", bike: newBike });
+  } catch (error) {
+    return res.status(500).json({ message: "Error adding bike", error });
+  }
+});
+
+/**
+ * PUT: Update existing bike (with optional new image)
+ */
+app.put("/api/bikes/:id", upload.single("image"), async (req, res) => {
+  try {
+    const { id } = req.params;
+    const {
+      bikeName,
+      brand,
+      rating,
+      price,
+      speed,
+      gps,
+      seatType,
+      automatic,
+      model,
+      description,
+    } = req.body;
+
+    let updatedFields = {
+      bikeName,
+      brand,
+      rating,
+      price,
+      speed,
+      gps,
+      seatType,
+      automatic,
+      model,
+      description,
+    };
+
+    // If user uploaded a new file, set a new imgUrl
+    if (req.file) {
+      updatedFields.imgUrl = "/uploads/" + req.file.filename;
+    }
+
+    const updatedBike = await Bike.findByIdAndUpdate(id, updatedFields, {
+      new: true,
+    });
+    if (!updatedBike) {
+      return res.status(404).json({ message: "Bike not found" });
+    }
+
+    return res
+      .status(200)
+      .json({ message: "Bike updated successfully", updatedBike });
+  } catch (error) {
+    return res.status(500).json({ message: "Error updating bike", error });
+  }
+});
+
+/**
+ * DELETE: Remove a bike by ID
+ */
+app.delete("/api/bikes/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const deletedBike = await Bike.findByIdAndDelete(id);
+    if (!deletedBike) {
+      return res.status(404).json({ message: "Bike not found" });
+    }
+    return res
+      .status(200)
+      .json({ message: "Bike deleted successfully", deletedBike });
+  } catch (error) {
+    return res.status(500).json({ message: "Error deleting bike", error });
+  }
+});
+
+// GET a single bike by slug
+app.get("/api/bikes/slug/:slug", async (req, res) => {
+  try {
+    const { slug } = req.params;
+    // If you store the bikeName in the DB, do something like:
+    const bike = await Bike.findOne({ bikeName: slug });
+    // OR .toLowerCase() if you do a case-insensitive match
+    if (!bike) {
+      return res.status(404).json({ message: "Bike not found" });
+    }
+    res.json(bike);
+  } catch (error) {
+    console.error("Error fetching bike:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+
+/* =====================================================
+   ============== BOOKING ROUTES =========================
+   ===================================================== */
+
+/*** POST: Create a new booking ***/
+app.post("/api/bookings", async (req, res) => {
+  try {
+    const {
+      userId,
+      firstName,
+      lastName,
+      email,
+      phone,
+      toAddress,
+      notes,
+      paymentMethod,
+    } = req.body;
+
+    const newBooking = new Booking({
+      user: userId,
+      firstName,
+      lastName,
+      email,
+      phone,
+      toAddress,
+      notes,
+      paymentMethod,
+    });
+
+    await newBooking.save();
+
+    return res.status(201).json({
+      message: "Booking created successfully",
+      booking: newBooking,
+    });
+  } catch (error) {
+    console.error("Error creating booking:", error);
+    return res.status(500).json({ message: "Error creating booking", error });
+  }
+});
+
+/***GET: Fetch all bookings****/
+app.get("/api/bookings", async (req, res) => {
+  try {
+    const allBookings = await Booking.find();
+    return res.status(200).json(allBookings);
+  } catch (error) {
+    console.error("Error fetching bookings:", error);
+    return res.status(500).json({ message: "Error fetching bookings", error });
+  }
+});
+
+
+/* =====================================================
+   ============== DEFAULT ROUTE =========================
+   ===================================================== */
+app.get("/", (req, res) => {
+  res.send("Hello World from the backend with image uploads!");
+});
+
+/* =====================================================
+   ============== START THE SERVER ======================
+   ===================================================== */
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);
 });

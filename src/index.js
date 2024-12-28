@@ -6,7 +6,7 @@ import multer from "multer";
 import path from "path";
 import { fileURLToPath } from "url";
 
-import { User, Car, Bike } from "./models.js";
+import { User, Car, Bike, Booking } from "./models.js";
 
 const app = express();
 // Use 5173 or any free port
@@ -93,21 +93,37 @@ app.post("/register", async (req, res) => {
 app.post("/login", async (req, res) => {
   const { email, password } = req.body;
   try {
-    // Check if user exists
     const user = await User.findOne({ email });
     if (!user) {
       return res.status(400).json({ message: "User not found" });
     }
 
-    // Compare password with hashed password in DB
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
       return res.status(400).json({ message: "Invalid credentials" });
     }
 
-    return res.status(200).json({ message: "User login successful" });
+    // Return the user's name as well
+    return res
+      .status(200)
+      .json({ message: "User login successful", userName: user.name });
   } catch (error) {
     return res.status(500).json({ message: "Error logging in", error });
+  }
+});
+
+/**GET user by name**/
+app.get("/api/users/name/:name", async (req, res) => {
+  try {
+    const userName = req.params.name;
+    const user = await User.findOne({ name: userName });
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    return res.json(user);
+  } catch (error) {
+    console.error("Error fetching user:", error);
+    return res.status(500).json({ message: "Server error" });
   }
 });
 
@@ -412,6 +428,60 @@ app.get("/api/bikes/slug/:slug", async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 });
+
+
+/* =====================================================
+   ============== BOOKING ROUTES =========================
+   ===================================================== */
+
+/*** POST: Create a new booking ***/
+app.post("/api/bookings", async (req, res) => {
+  try {
+    const {
+      userId,
+      firstName,
+      lastName,
+      email,
+      phone,
+      toAddress,
+      notes,
+      paymentMethod,
+    } = req.body;
+
+    const newBooking = new Booking({
+      user: userId,
+      firstName,
+      lastName,
+      email,
+      phone,
+      toAddress,
+      notes,
+      paymentMethod,
+    });
+
+    await newBooking.save();
+
+    return res.status(201).json({
+      message: "Booking created successfully",
+      booking: newBooking,
+    });
+  } catch (error) {
+    console.error("Error creating booking:", error);
+    return res.status(500).json({ message: "Error creating booking", error });
+  }
+});
+
+/***GET: Fetch all bookings****/
+app.get("/api/bookings", async (req, res) => {
+  try {
+    const allBookings = await Booking.find();
+    return res.status(200).json(allBookings);
+  } catch (error) {
+    console.error("Error fetching bookings:", error);
+    return res.status(500).json({ message: "Error fetching bookings", error });
+  }
+});
+
 
 /* =====================================================
    ============== DEFAULT ROUTE =========================

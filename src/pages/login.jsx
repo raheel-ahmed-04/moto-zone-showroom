@@ -19,6 +19,7 @@ const Login = () => {
     password: "",
   });
   const navigate = useNavigate();
+  const [errorMessage, setErrorMessage] = useState("");
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.id]: e.target.value });
@@ -31,11 +32,25 @@ const Login = () => {
         "http://localhost:2000/login",
         formData
       );
-      console.log(response.data);
-      // Handle success, e.g., save the token and redirect
-      // localStorage.setItem("token", response.data.token);
-      navigate("/home"); // Redirect to the homepage or dashboard
+
+      // Example: { message: "User login successful", userName: "John Doe" }
+      console.log("Login Response:", response.data);
+
+      // Store the name in localStorage
+      if (response.data?.userName) {
+        localStorage.setItem("userName", response.data.userName);
+      }
+
+      // Redirect to the homepage or dashboard
+      navigate("/home");
     } catch (error) {
+      // If there's a server response with status 400, display the message
+      if (error.response && error.response.status === 400) {
+        setErrorMessage(error.response.data.message);
+      } else {
+        // Otherwise show a generic error
+        setErrorMessage("Something went wrong. Please try again.");
+      }
       console.error("There was an error!!", error);
     }
   };
@@ -46,6 +61,21 @@ const Login = () => {
         <Row className="justify-content-center">
           <Col lg="6" md="8" sm="12">
             <h2>Login</h2>
+
+            {/* Conditionally render the error message */}
+            {errorMessage && (
+              <div
+                style={{
+                  backgroundColor: "#f8d7da",
+                  padding: "10px",
+                  marginBottom: "10px",
+                  color: "#721c24",
+                }}
+              >
+                {errorMessage}
+              </div>
+            )}
+
             <Form onSubmit={handleSubmit}>
               <FormGroup>
                 <Label for="email">Email</Label>

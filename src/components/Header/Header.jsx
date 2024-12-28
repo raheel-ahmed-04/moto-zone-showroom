@@ -1,6 +1,6 @@
-import React from "react";
+import { React, useState, useEffect } from "react";
 import { Container, Row, Col, Button } from "reactstrap";
-import { Link, NavLink } from "react-router-dom";
+import { Link, NavLink, useNavigate, useLocation } from "react-router-dom";
 import "../../styles/header.css";
 
 const navLinks = [
@@ -31,6 +31,24 @@ const navLinks = [
 ];
 
 const Header = () => {
+  const location = useLocation(); // Watch for route changes
+  const navigate = useNavigate();
+  const [currentUser, setCurrentUser] = useState(null);
+
+  useEffect(() => {
+    // Check localStorage on mount
+    const storedUserName = localStorage.getItem("userName");
+    if (storedUserName) {
+      setCurrentUser(storedUserName);
+    }
+  }, [location]);
+
+  const handleLogout = () => {
+    localStorage.removeItem("userName");
+    setCurrentUser(null);
+    navigate("/login");
+  };
+
   return (
     <header className="header">
       <div className="header__top">
@@ -46,15 +64,38 @@ const Header = () => {
             </Col>
             <Col lg="6" md="6" sm="6">
               <div className="header__top__right d-flex align-items-center justify-content-end gap-3">
-                <Link to="/login" className="d-flex align-items-center gap-1">
-                  <i className="ri-login-circle-line"></i> Login
-                </Link>
-                <Link
-                  to="/register"
-                  className="d-flex align-items-center gap-1"
-                >
-                  <i className="ri-user-line"></i> Register
-                </Link>
+                {/* If user is logged in (currentUser exists), display user name */}
+                {currentUser ? (
+                  <>
+                    <span className="d-flex align-items-center gap-1">
+                      <i className="ri-user-line"></i>
+                      Welcome, {currentUser}
+                    </span>
+                    <Link
+                      to="/login"
+                      onClick={handleLogout}
+                      className="d-flex align-items-center gap-1"
+                    >
+                      <i className="ri-login-circle-line"></i> Logout
+                    </Link>
+                  </>
+                ) : (
+                  // Otherwise, show Login/Register
+                  <>
+                    <Link
+                      to="/login"
+                      className="d-flex align-items-center gap-1"
+                    >
+                      <i className="ri-login-circle-line"></i> Login
+                    </Link>
+                    <Link
+                      to="/register"
+                      className="d-flex align-items-center gap-1"
+                    >
+                      <i className="ri-user-line"></i> Register
+                    </Link>
+                  </>
+                )}
               </div>
             </Col>
           </Row>
@@ -127,6 +168,16 @@ const Header = () => {
                     {link.display}
                   </NavLink>
                 ))}
+                {currentUser && (
+                  <NavLink
+                    to="./bookings-history"
+                    key="7"
+                    className="nav__item"
+                    activeClassName="nav__active"
+                  >
+                    Bookings History
+                  </NavLink>
+                )}
               </div>
             </div>
 

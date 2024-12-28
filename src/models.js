@@ -52,7 +52,26 @@ const bikeSchema = new mongoose.Schema({
   description: { type: String, required: true },
 });
 
+/* --------------------- BOOKING SCHEMA --------------------- */
+const bookingSchema = new mongoose.Schema({
+  user: { 
+    type: mongoose.Schema.Types.ObjectId, 
+    ref: "User",
+    required: true 
+  },
+  firstName: { type: String, required: true },
+  lastName: { type: String, required: true },
+  email: { type: String, required: true },
+  phone: { type: String, required: true },
+  toAddress: { type: String, required: true },
+  notes: { type: String },
+  paymentMethod: { type: String, required: true }, 
+  createdAt: { type: Date, default: Date.now },
+});
+
+
 /* --------------------- EXPORT MODELS --------------------- */
 export const User = mongoose.model("User", userSchema);
 export const Car = mongoose.model("Car", carSchema);
 export const Bike = mongoose.model("Bike", bikeSchema);
+export const Booking = mongoose.model("Booking", bookingSchema);
